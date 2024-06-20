@@ -1,8 +1,9 @@
 import os
+
+import openai
 import requests
 from dotenv import load_dotenv
 import json
-
 
 def get_air_quality_data(station, token):
     url = f"http://api.waqi.info/feed/{station}/?token={token}"
@@ -18,6 +19,7 @@ def main():
     # Retrieve the token from the environment variable
     load_dotenv()
     token = os.getenv('WAQI_TOKEN')
+
     if not token:
         print("Error: WAQI_TOKEN environment variable not set.")
         return
