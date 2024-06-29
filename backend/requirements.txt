@@ -1,8 +1,9 @@
 requests
 openai
 python-dotenv
-openmeto-requests
 requests-cache
 retry-requests
 numpy
 pandas
+geopy
+openmeteo_requests
