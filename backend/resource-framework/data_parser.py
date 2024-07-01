@@ -47,6 +47,9 @@ hourly_data = {
 }
 hourly_dataframe = pd.DataFrame(data=hourly_data)
 
+# Round the hourly data to 2 decimal places
+hourly_dataframe = hourly_dataframe.round(2)
+
 # Compute daily averages for soil moisture values
 hourly_dataframe['date'] = hourly_dataframe['date'].dt.date  # Convert to date only
 daily_averages = hourly_dataframe.groupby('date').mean().reset_index()
@@ -75,8 +78,15 @@ daily_dataframe = pd.DataFrame(data=daily_data)
 daily_dataframe['date'] = pd.to_datetime(daily_dataframe['date']).dt.date
 daily_averages['date'] = pd.to_datetime(daily_averages['date']).dt.date
 
+# Round daily data to 2 decimal places before merging
+daily_dataframe = daily_dataframe.round(2)
+daily_averages = daily_averages.round(2)
+
 # Merge daily averages with daily data
-final_daily_dataframe = pd.merge(daily_dataframe, daily_averages, on='date')
+final_daily_dataframe = pd.merge(daily_dataframe, daily_averages, on='date', suffixes=('', '_avg'))
+
+# Round the final DataFrame to ensure all values are rounded
+final_daily_dataframe = final_daily_dataframe.round(2)
 
 print(final_daily_dataframe)
 
@@ -86,6 +96,22 @@ cursor = conn.cursor()
 
 # Insert or update data into the weather_data table
 for _, row in final_daily_dataframe.iterrows():
+    # Extract values and round them before insertion
+    data = (
+        row['date'],
+        round(row['temperature_2m_max'], 2),
+        round(row['temperature_2m_min'], 2),
+        round(row['uv_index_max'], 2),
+        round(row['precipitation_sum'], 2),
+        round(row['rain_sum'], 2),
+        round(row['showers_sum'], 2),
+        round(row['snowfall_sum'], 2),
+        round(row['precipitation_probability_max'], 2),
+        round(row['soil_moisture_1_to_3cm'], 2),
+        round(row['soil_moisture_9_to_27cm'], 2)
+    )
+    # Print the rounded data to verify
+    print(f"Inserting row: {data}")
     cursor.execute('''
         INSERT INTO weather_data (date, temperature_2m_max, temperature_2m_min, uv_index_max, precipitation_sum, rain_sum, 
         showers_sum, snowfall_sum, precipitation_probability_max, soil_moisture_1_to_3cm, soil_moisture_9_to_27cm)
@@ -101,19 +127,7 @@ for _, row in final_daily_dataframe.iterrows():
             precipitation_probability_max = excluded.precipitation_probability_max,
             soil_moisture_1_to_3cm = excluded.soil_moisture_1_to_3cm,
             soil_moisture_9_to_27cm = excluded.soil_moisture_9_to_27cm
-    ''', (
-        row['date'],
-        row['temperature_2m_max'],
-        row['temperature_2m_min'],
-        row['uv_index_max'],
-        row['precipitation_sum'],
-        row['rain_sum'],
-        row['showers_sum'],
-        row['snowfall_sum'],
-        row['precipitation_probability_max'],
-        row['soil_moisture_1_to_3cm'],
-        row['soil_moisture_9_to_27cm']
-    ))
+    ''', data)
 
 conn.commit()
 conn.close()
