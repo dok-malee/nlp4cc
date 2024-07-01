@@ -1,9 +1,8 @@
 import openmeteo_requests
-
 import requests_cache
 import pandas as pd
 from retry_requests import retry
-from geopy.geocoders import Nominatim
+import sqlite3
 
 # Set pandas display options to show more rows and columns
 pd.set_option('display.max_rows', None)
@@ -16,26 +15,20 @@ cache_session = requests_cache.CachedSession('.cache', expire_after=3600)
 retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
 openmeteo = openmeteo_requests.Client(session=retry_session)
 
-# Make sure all required weather variables are listed here
-# The order of variables in hourly or daily is important to assign them correctly below
+# Define API parameters
 url = "https://api.open-meteo.com/v1/forecast"
 params = {
-    "latitude": 52.52,
-    "longitude": 13.41,
+    "latitude": 48.13,
+    "longitude": 11.57,
     "hourly": ["soil_moisture_1_to_3cm", "soil_moisture_9_to_27cm"],
     "daily": ["temperature_2m_max", "temperature_2m_min", "uv_index_max", "precipitation_sum", "rain_sum",
               "showers_sum", "snowfall_sum", "precipitation_probability_max"],
     "timezone": "auto",
-    "past_days": 1,  # 1 for test purposes, change to 7 later
+    "past_days": 7,  # 1 for test purposes, change to 7 later
     "forecast_days": 1
 }
 responses = openmeteo.weather_api(url, params=params)
 response = responses[0]
-
-# Get city name using geopy
-geolocator = Nominatim(user_agent='your_app_name')
-location = geolocator.reverse((response.Latitude(), response.Longitude()))
-city_name = location.raw['address'].get('city', 'Unknown')
 
 # Process hourly data. The order of variables needs to be the same as requested.
 hourly = response.Hourly()
@@ -85,7 +78,42 @@ daily_averages['date'] = pd.to_datetime(daily_averages['date']).dt.date
 # Merge daily averages with daily data
 final_daily_dataframe = pd.merge(daily_dataframe, daily_averages, on='date')
 
-# Add city name column (Maybe there is a better solution than adding the city repetitively in a new column?)
-final_daily_dataframe['city'] = city_name
-
 print(final_daily_dataframe)
+
+# Connect to SQLite database and insert or update data
+conn = sqlite3.connect('climate_data.db')
+cursor = conn.cursor()
+
+# Insert or update data into the weather_data table
+for _, row in final_daily_dataframe.iterrows():
+    cursor.execute('''
+        INSERT INTO weather_data (date, temperature_2m_max, temperature_2m_min, uv_index_max, precipitation_sum, rain_sum, 
+        showers_sum, snowfall_sum, precipitation_probability_max, soil_moisture_1_to_3cm, soil_moisture_9_to_27cm)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(date) DO UPDATE SET
+            temperature_2m_max = excluded.temperature_2m_max,
+            temperature_2m_min = excluded.temperature_2m_min,
+            uv_index_max = excluded.uv_index_max,
+            precipitation_sum = excluded.precipitation_sum,
+            rain_sum = excluded.rain_sum,
+            showers_sum = excluded.showers_sum,
+            snowfall_sum = excluded.snowfall_sum,
+            precipitation_probability_max = excluded.precipitation_probability_max,
+            soil_moisture_1_to_3cm = excluded.soil_moisture_1_to_3cm,
+            soil_moisture_9_to_27cm = excluded.soil_moisture_9_to_27cm
+    ''', (
+        row['date'],
+        row['temperature_2m_max'],
+        row['temperature_2m_min'],
+        row['uv_index_max'],
+        row['precipitation_sum'],
+        row['rain_sum'],
+        row['showers_sum'],
+        row['snowfall_sum'],
+        row['precipitation_probability_max'],
+        row['soil_moisture_1_to_3cm'],
+        row['soil_moisture_9_to_27cm']
+    ))
+
+conn.commit()
+conn.close()
