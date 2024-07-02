@@ -7,8 +7,9 @@ cursor = conn.cursor()
 # Create the weather_data table with the defined schema if it doesn't exist
 cursor.execute('''
     CREATE TABLE IF NOT EXISTS weather_data (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         date TEXT UNIQUE,
+        location_code TEXT,
         temperature_2m_max REAL,
         temperature_2m_min REAL,
         uv_index_max REAL,
@@ -33,6 +34,7 @@ cursor.execute('''
 # Insert units into the metadata table
 units = {
     "date": "YYYY-MM-DD",
+    "location_code": "String",
     "temperature_2m_max": "°C",
     "temperature_2m_min": "°C",
     "uv_index_max": "index",

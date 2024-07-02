@@ -16,10 +16,13 @@ retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
 openmeteo = openmeteo_requests.Client(session=retry_session)
 
 # Define API parameters
+latitude = 48.13
+longitude = 11.57
+
 url = "https://api.open-meteo.com/v1/forecast"
 params = {
-    "latitude": 48.13,
-    "longitude": 11.57,
+    "latitude": latitude,
+    "longitude": longitude,
     "hourly": ["soil_moisture_1_to_3cm", "soil_moisture_9_to_27cm"],
     "daily": ["temperature_2m_max", "temperature_2m_min", "uv_index_max", "precipitation_sum", "rain_sum",
               "showers_sum", "snowfall_sum", "precipitation_probability_max"],
@@ -29,6 +32,9 @@ params = {
 }
 responses = openmeteo.weather_api(url, params=params)
 response = responses[0]
+
+# Generate a location code based on latitude and longitude
+location_code = f"{latitude}_{longitude}"
 
 # Process hourly data. The order of variables needs to be the same as requested.
 hourly = response.Hourly()
@@ -46,9 +52,6 @@ hourly_data = {
     "soil_moisture_9_to_27cm": hourly_soil_moisture_9_to_27cm
 }
 hourly_dataframe = pd.DataFrame(data=hourly_data)
-
-# Round the hourly data to 2 decimal places
-hourly_dataframe = hourly_dataframe.round(2)
 
 # Compute daily averages for soil moisture values
 hourly_dataframe['date'] = hourly_dataframe['date'].dt.date  # Convert to date only
@@ -76,17 +79,12 @@ daily_dataframe = pd.DataFrame(data=daily_data)
 
 # Ensure date columns are in the same format
 daily_dataframe['date'] = pd.to_datetime(daily_dataframe['date']).dt.date
-daily_averages['date'] = pd.to_datetime(daily_averages['date']).dt.date
-
-# Round daily data to 2 decimal places before merging
-daily_dataframe = daily_dataframe.round(2)
-daily_averages = daily_averages.round(2)
 
 # Merge daily averages with daily data
 final_daily_dataframe = pd.merge(daily_dataframe, daily_averages, on='date', suffixes=('', '_avg'))
 
-# Round the final DataFrame to ensure all values are rounded
-final_daily_dataframe = final_daily_dataframe.round(2)
+# Add location_code to the DataFrame
+final_daily_dataframe['location_code'] = location_code
 
 print(final_daily_dataframe)
 
@@ -99,6 +97,7 @@ for _, row in final_daily_dataframe.iterrows():
     # Extract values and round them before insertion
     data = (
         row['date'],
+        row['location_code'],
         round(row['temperature_2m_max'], 2),
         round(row['temperature_2m_min'], 2),
         round(row['uv_index_max'], 2),
@@ -113,10 +112,11 @@ for _, row in final_daily_dataframe.iterrows():
     # Print the rounded data to verify
     print(f"Inserting row: {data}")
     cursor.execute('''
-        INSERT INTO weather_data (date, temperature_2m_max, temperature_2m_min, uv_index_max, precipitation_sum, rain_sum, 
+        INSERT INTO weather_data (date, location_code, temperature_2m_max, temperature_2m_min, uv_index_max, precipitation_sum, rain_sum, 
         showers_sum, snowfall_sum, precipitation_probability_max, soil_moisture_1_to_3cm, soil_moisture_9_to_27cm)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(date) DO UPDATE SET
+            location_code = excluded.location_code,
             temperature_2m_max = excluded.temperature_2m_max,
             temperature_2m_min = excluded.temperature_2m_min,
             uv_index_max = excluded.uv_index_max,
@@ -131,3 +131,5 @@ for _, row in final_daily_dataframe.iterrows():
 
 conn.commit()
 conn.close()
+
+#%%
