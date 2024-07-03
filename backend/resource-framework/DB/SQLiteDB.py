@@ -1,7 +1,7 @@
 import sqlite3
 
 # Connect to SQLite database
-conn = sqlite3.connect('climate_data.db')
+conn = sqlite3.connect('../climate_data.db')
 cursor = conn.cursor()
 
 # Create the weather_data table with the defined schema if it doesn't exist

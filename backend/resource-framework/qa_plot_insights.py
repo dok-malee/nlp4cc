@@ -80,7 +80,7 @@ if __name__ == '__main__':
     database = file_path
 
     # get GPT result
-    system_role = '''Write python code to select relevant data and draw the chart and use the windows-1252 encoding. Please save the plot to "plot.pdf" and save the label and extracted values shown in the 
+    system_role = '''Write python code to select relevant data and draw the chart. Please save the plot to "plot.pdf" and save the label and extracted values shown in the 
     plot to "plot_data.txt".'''
 
     question = "Question: " + question_original + '\n\nconn = sqlite3.connect("' + database + '")\n\nSchema: \n' + schema

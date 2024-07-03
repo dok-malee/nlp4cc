@@ -2,7 +2,7 @@ import sqlite3
 
 def reset_database():
     # Connect to SQLite database
-    conn = sqlite3.connect('climate_data.db')
+    conn = sqlite3.connect('../climate_data.db')
     cursor = conn.cursor()
 
     # Drop existing tables if they exist
