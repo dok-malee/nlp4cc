@@ -14,7 +14,8 @@ def reset_database():
         CREATE TABLE weather_data (
             id INTEGER PRIMARY KEY,
             date TEXT UNIQUE,
-            location_code TEXT,
+            latitude TEXT,
+            longitude TEXT,
             temperature_2m_max REAL,
             temperature_2m_min REAL,
             uv_index_max REAL,
@@ -24,7 +25,23 @@ def reset_database():
             snowfall_sum REAL,
             precipitation_probability_max REAL,
             soil_moisture_1_to_3cm REAL,
-            soil_moisture_9_to_27cm REAL
+            soil_moisture_9_to_27cm REAL,
+            pm10 REAL,
+            pm2_5 REAL,
+            carbon_monoxide REAL,
+            nitrogen_dioxide REAL,
+            sulphur_dioxide REAL,
+            ozone REAL,
+            aerosol_optical_depth REAL,
+            dust REAL,
+            ammonia REAL,
+            alder_pollen REAL,
+            birch_pollen REAL,
+            grass_pollen REAL,
+            mugwort_pollen REAL,
+            olive_pollen REAL,
+            ragweed_pollen REAL,
+            river_discharge REAL
         )
     ''')
 

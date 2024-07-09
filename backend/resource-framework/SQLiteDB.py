@@ -34,7 +34,8 @@ cursor.execute('''
         grass_pollen REAL,
         mugwort_pollen REAL,
         olive_pollen REAL,
-        ragweed_pollen REAL
+        ragweed_pollen REAL,
+        river_discharge REAL
     )
 ''')
 
