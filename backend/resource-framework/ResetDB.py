@@ -9,9 +9,9 @@ def reset_database():
     cursor.execute('DROP TABLE IF EXISTS weather_data')
     cursor.execute('DROP TABLE IF EXISTS metadata')
 
-    # Create the weather_data table with the defined schema
+    # Create the weather_data table with the defined schema if it doesn't exist
     cursor.execute('''
-        CREATE TABLE weather_data (
+        CREATE TABLE IF NOT EXISTS weather_data (
             id INTEGER PRIMARY KEY,
             date TEXT UNIQUE,
             latitude TEXT,
@@ -45,9 +45,9 @@ def reset_database():
         )
     ''')
 
-    # Create the metadata table for units
+    # Create the metadata table for units if it doesn't exist
     cursor.execute('''
-        CREATE TABLE metadata (
+        CREATE TABLE IF NOT EXISTS metadata (
             column_name TEXT PRIMARY KEY,
             unit TEXT
         )
@@ -56,7 +56,8 @@ def reset_database():
     # Insert units into the metadata table
     units = {
         "date": "YYYY-MM-DD",
-        "location_code": "String",
+        "latitude": "String",
+        "longitude": "String",
         "temperature_2m_max": "°C",
         "temperature_2m_min": "°C",
         "uv_index_max": "index",
@@ -66,7 +67,23 @@ def reset_database():
         "snowfall_sum": "mm",
         "precipitation_probability_max": "%",
         "soil_moisture_1_to_3cm": "m³/m³",
-        "soil_moisture_9_to_27cm": "m³/m³"
+        "soil_moisture_9_to_27cm": "m³/m³",
+        "pm10": "µg/m³",
+        "pm2_5": "µg/m³",
+        "carbon_monoxide": "mg/m³",
+        "nitrogen_dioxide": "µg/m³",
+        "sulphur_dioxide": "µg/m³",
+        "ozone": "µg/m³",
+        "aerosol_optical_depth": "dimensionless",
+        "dust": "µg/m³",
+        "ammonia": "µg/m³",
+        "alder_pollen": "grains/m³",
+        "birch_pollen": "grains/m³",
+        "grass_pollen": "grains/m³",
+        "mugwort_pollen": "grains/m³",
+        "olive_pollen": "grains/m³",
+        "ragweed_pollen": "grains/m³",
+        "river_discharge": "m³/s"
     }
 
     for column, unit in units.items():
