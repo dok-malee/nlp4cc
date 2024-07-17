@@ -61,33 +61,36 @@ if __name__ == '__main__':
     file_path = "climate_data.db"
     print("Database file:", file_path)
 
-    schema_path = "schema_weather_api.sql"
+    schema_path = "climate_schema.sql"
     print("Schema file:", schema_path)
 
     # ask user to ask a question
     question_original = input(
-        "* Please enter your question (Press Enter to use the default question): \nWhat is the maximum temperature today? Draw a bar chart of last week's daily maximum temperature.")
+        "* Please enter your question/prompt (Press Enter to use the default question): \n List all days where the "
+        "maximum temperature was above 30 degrees celsius.")
 
     if question_original == '':
-        question_original = ("What is the maximum temperature today? Draw a bar chart of last week's daily maximum temperature.")
+        question_original = (
+            "List all days where the maximum temperature was above 30 degrees celsius.")
 
     # get schema string
     schema_file = open(schema_path, 'r').read()
-
     schema = extract_create_table(schema_file)
     print("Extracted Schema file: ", schema)
 
     database = file_path
 
     # get GPT result
-    system_role = '''Write python code to select relevant data and draw the chart. Please save the plot to "plot.pdf" and save the label and extracted values shown in the 
-    plot to "plot_data.txt".'''
+    system_role = '''Write python code to select and save relevant data from the database. Please save the retrieved values 
+    from the database to "data.txt".
+    Additionally, always query this default data: temperature, uv index, precipitation, soil moisture and pm 2.5 and 10.'''
 
-    question = "Question: " + question_original + '\n\nconn = sqlite3.connect("' + database + '")\n\nSchema: \n' + schema
+
+    question = "Question/Prompt: " + question_original + '\n\nconn = sqlite3.connect("' + database + '")\n\nSchema: \n' + schema
     max_tokens = 2000
 
-    print("*** Step1: generate code for extracting data and drawing the chart")
-    print('* Question: ', question_original)
+    print("*** Step1: generate code for extracting data")
+    print('* Question/Prompt: ', question_original)
     input("* Press Enter to continue ...")
 
     start1 = time.time()
@@ -121,12 +124,17 @@ if __name__ == '__main__':
     step2_time = int(time.time() - start2)
     print("* Time of Step2: ", step2_time, ' seconds\n')
 
-    data = open('plot_data.txt', 'r').read()
+    data = open('data.txt', 'r').read()
 
-    print("*** Step3: generate analysis and insights in 3 bullet points.")
+    print("*** Step3: generate weather report")
 
     question = "Question: " + question_original + '\nData: \n' + data
-    system_role = 'Generate analysis and insights about the data.'  # System role might need adjustment here
+    system_role = (
+        "Please write an extensive weather report based on the provided data from Munich. "
+        "Additionally, add a section which discusses the potential climate change aspects, focusing on specific risks "
+        "and dangers for Munich according to your historic knowledge and the given data."
+        "Finally, provide a detailed answer to the user question if a question is presented."
+    )  # System role might need adjustment here
 
     start3 = time.time()
     print('* Start generating analysis and insights ...')
