@@ -112,7 +112,7 @@ for _, row in final_daily_dataframe.iterrows():
         showers_sum, snowfall_sum, precipitation_probability_max, soil_moisture_1_to_3cm, soil_moisture_9_to_27cm,
         pm10, pm2_5, carbon_monoxide, nitrogen_dioxide, sulphur_dioxide, ozone, aerosol_optical_depth, dust, ammonia, alder_pollen, birch_pollen,
         grass_pollen, mugwort_pollen, olive_pollen, ragweed_pollen, river_discharge)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(date) DO UPDATE SET
             latitude = excluded.latitude,
             longitude = excluded.longitude,
@@ -146,3 +146,5 @@ for _, row in final_daily_dataframe.iterrows():
 
 conn.commit()
 conn.close()
+
+#%%

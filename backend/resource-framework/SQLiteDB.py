@@ -9,7 +9,8 @@ cursor.execute('''
     CREATE TABLE IF NOT EXISTS weather_data (
         id INTEGER PRIMARY KEY,
         date TEXT UNIQUE,
-        location_code TEXT,
+        latitude TEXT,
+        longitude TEXT,
         temperature_2m_max REAL,
         temperature_2m_min REAL,
         uv_index_max REAL,
@@ -50,7 +51,8 @@ cursor.execute('''
 # Insert units into the metadata table
 units = {
     "date": "YYYY-MM-DD",
-    "location_code": "String",
+    "latitude": "String",
+    "longitude": "String",
     "temperature_2m_max": "°C",
     "temperature_2m_min": "°C",
     "uv_index_max": "index",
@@ -75,7 +77,8 @@ units = {
     "grass_pollen": "grains/m³",
     "mugwort_pollen": "grains/m³",
     "olive_pollen": "grains/m³",
-    "ragweed_pollen": "grains/m³"
+    "ragweed_pollen": "grains/m³",
+    "river_discharge": "m³/s"
 }
 
 for column, unit in units.items():
