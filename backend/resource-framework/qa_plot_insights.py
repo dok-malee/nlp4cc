@@ -7,6 +7,12 @@ import time
 import tkinter as tk
 from tkinter import filedialog
 
+# Change Here
+qa_id = 4
+question = (
+    "Analyze the correlation between temperature fluctuations and air quality indicators (e.g., pm2.5, ozone) over "
+    "the time from 2024-05-01 to 2024-05-30.")
+
 random.seed(42)
 
 load_dotenv()
@@ -16,7 +22,7 @@ openai.api_key = os.getenv('OPENAI_API_KEY')
 def get_gpt_result(system_role, question, max_tokens):
     client = OpenAI()
     completion = client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-3.5-turbo",
         max_tokens=max_tokens,
         messages=[
             {"role": "system", "content": system_role},
@@ -28,13 +34,13 @@ def get_gpt_result(system_role, question, max_tokens):
 
 
 def save_python(ipt):
-    py_file = open("plot_data_script.py", "w")
+    py_file = open(f"{qa_id}_script.py", "w")
     py_file.write(ipt)
     py_file.close()
 
 
 def execute_python_code():
-    os.system("python plot_data_script.py")
+    os.system(f"python {qa_id}_script.py")
 
 
 def find_all(a_str, sub):
@@ -64,29 +70,39 @@ if __name__ == '__main__':
     schema_path = "climate_schema.sql"
     print("Schema file:", schema_path)
 
+    hist_schema_path = "historic_climate_schema.sql"
+    print("Schema file:", hist_schema_path)
+
     # ask user to ask a question
     question_original = input(
         "* Please enter your question/prompt (Press Enter to use the default question): \n List all days where the "
         "maximum temperature was above 30 degrees celsius.")
 
     if question_original == '':
-        question_original = (
-            "List all days where the maximum temperature was above 30 degrees celsius.")
+        question_original = question
 
     # get schema string
     schema_file = open(schema_path, 'r').read()
     schema = extract_create_table(schema_file)
-    print("Extracted Schema file: ", schema)
+
+    hist_schema_file = open(hist_schema_path, 'r').read()
+    hist_schema = extract_create_table(hist_schema_file)
+
+    print("Extracted Schema files: ", schema + "\n" + hist_schema)
 
     database = file_path
 
     # get GPT result
-    system_role = '''Write python code to select and save relevant data from the database. Please save the retrieved values 
-    from the database to "data.txt".
-    Additionally, always query this default data: temperature, uv index, precipitation, soil moisture and pm 2.5 and 10.'''
+    system_role = f'''Write python code to select and save relevant data from the database. Please save the retrieved values 
+    from the database to "{qa_id}_data.txt".
+    Note: Historic Data is only provided from 1980 to 2023 for the days 07-01 to 07-09. '''
 
+    question = (
+            "Question/Prompt: " + question_original + '\n\n'
+            "conn = sqlite3.connect('" + database + "')\n\n"
+            "Current Weather Schema for the year 2024:\n" + schema + '\n\n'
+            "Historic Weather Schema from 1980 to 2023:\n" + hist_schema + '\n\n')
 
-    question = "Question/Prompt: " + question_original + '\n\nconn = sqlite3.connect("' + database + '")\n\nSchema: \n' + schema
     max_tokens = 2000
 
     print("*** Step1: generate code for extracting data")
@@ -124,22 +140,28 @@ if __name__ == '__main__':
     step2_time = int(time.time() - start2)
     print("* Time of Step2: ", step2_time, ' seconds\n')
 
-    data = open('data.txt', 'r').read()
+    if not os.path.exists(f'{qa_id}_data.txt'):
+        with open(f'{qa_id}_data.txt', 'w') as response_file:
+            pass
+
+    data = open(f'{qa_id}_data.txt', 'r').read()
 
     print("*** Step3: generate weather report")
 
     question = "Question: " + question_original + '\nData: \n' + data
-    system_role = (
-        "Please write an extensive weather report based on the provided data from Munich. "
-        "Additionally, add a section which discusses the potential climate change aspects, focusing on specific risks "
-        "and dangers for Munich according to your historic knowledge and the given data."
+    second_system_prompt = (
+        "Write an extensive weather report based on the provided data for Munich. "
+        "If historic data is provided and relevant to the question, include a trend analysis to highlight changes and "
+        "trends over"
+        "time in the context of climate change. "
         "Finally, provide a detailed answer to the user question if a question is presented."
-    )  # System role might need adjustment here
+    )
+    # System role might need adjustment here
 
     start3 = time.time()
     print('* Start generating analysis and insights ...')
 
-    response = get_gpt_result(system_role, question, max_tokens)
+    response = get_gpt_result(second_system_prompt, question, max_tokens)
 
     text = response.choices[0].message.content
 
@@ -150,6 +172,10 @@ if __name__ == '__main__':
 
     print('*** Total time: ', step1_time + step2_time + step3_time, ' seconds\n\n')
 
-    response_file = open('analysis.txt', 'w')
+    if not os.path.exists(f'{qa_id}_analysis.txt'):
+        with open(f'{qa_id}_analysis.txt', 'w') as response_file:
+            pass
+
+    response_file = open(f'{qa_id}_analysis.txt', 'w')
     response_file.write(text)
     response_file.close()
