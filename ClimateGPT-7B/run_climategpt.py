@@ -1,7 +1,10 @@
+import os
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from accelerate import load_checkpoint_and_dispatch
 import torch
-import os
+
+# Set environment variable for MPS fallback
+os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
 
 # Ensure the current device is mps if available
 device = torch.device("mps") if torch.backends.mps.is_available() else torch.device("cpu")
@@ -24,9 +27,11 @@ model = load_checkpoint_and_dispatch(
     offload_folder=offload_folder
 )
 
-# Generate text
+# Generate text with attention mask
 input_text = "What are the effects of climate change?"
-input_ids = tokenizer(input_text, return_tensors='pt').input_ids.to(device)
+inputs = tokenizer(input_text, return_tensors='pt')
+input_ids = inputs.input_ids.to(device)
+attention_mask = inputs.attention_mask.to(device)
 
-outputs = model.generate(input_ids, max_length=200, num_return_sequences=1)
+outputs = model.generate(input_ids, attention_mask=attention_mask, max_length=200, num_return_sequences=1)
 print(tokenizer.decode(outputs[0], skip_special_tokens=True))
