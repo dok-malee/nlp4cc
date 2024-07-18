@@ -8,10 +8,13 @@ import tkinter as tk
 from tkinter import filedialog
 
 # Change Here
-qa_id = 4
+qa_id = 3
 question = (
-    "Analyze the correlation between temperature fluctuations and air quality indicators (e.g., pm2.5, ozone) over "
-    "the time from 2024-05-01 to 2024-05-30.")
+    'Analyze the air quality data (pm10, pm2.5, carbon monoxide, nitrogen dioxide, sulphur dioxide, ozone) over the '
+    'time from 2024-06-01 to 2024-06-30. Summarize the findings and provide insights into any significant patterns or '
+    'concerns.')
+#model="gpt-3.5-turbo"
+model="gpt-4o"
 
 random.seed(42)
 
@@ -22,7 +25,7 @@ openai.api_key = os.getenv('OPENAI_API_KEY')
 def get_gpt_result(system_role, question, max_tokens):
     client = OpenAI()
     completion = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model=model,
         max_tokens=max_tokens,
         messages=[
             {"role": "system", "content": system_role},
@@ -99,9 +102,9 @@ if __name__ == '__main__':
 
     question = (
             "Question/Prompt: " + question_original + '\n\n'
-            "conn = sqlite3.connect('" + database + "')\n\n"
-            "Current Weather Schema for the year 2024:\n" + schema + '\n\n'
-            "Historic Weather Schema from 1980 to 2023:\n" + hist_schema + '\n\n')
+                                                      "conn = sqlite3.connect('" + database + "')\n\n"
+                                                                                              "Current Weather Schema for the year 2024:\n" + schema + '\n\n'
+                                                                                                                                                       "Historic Weather Schema from 1980 to 2023:\n" + hist_schema + '\n\n')
 
     max_tokens = 2000
 
@@ -110,7 +113,7 @@ if __name__ == '__main__':
     input("* Press Enter to continue ...")
 
     start1 = time.time()
-    print("* Calling GPT-3.5 API ...")
+    print(f"* Calling {model} API ...")
     response = get_gpt_result(system_role, question, max_tokens)
     text = response.choices[0].message.content
 
@@ -151,6 +154,8 @@ if __name__ == '__main__':
     question = "Question: " + question_original + '\nData: \n' + data
     second_system_prompt = (
         "Write an extensive weather report based on the provided data for Munich. "
+        # #Necessary for GPT-4o to use DB data, otherwise will just query internet
+        "Try to focus on the data provided in the databases first, before querying from the internet. " 
         "If historic data is provided and relevant to the question, include a trend analysis to highlight changes and "
         "trends over"
         "time in the context of climate change. "
