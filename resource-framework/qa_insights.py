@@ -4,17 +4,30 @@ from openai import OpenAI
 import os
 import random
 import time
-import tkinter as tk
-from tkinter import filedialog
 
-# Change Here
-qa_id = 3
+# Change here
+qa_id = 16
 question = (
-    'Analyze the air quality data (pm10, pm2.5, carbon monoxide, nitrogen dioxide, sulphur dioxide, ozone) over the '
-    'time from 2024-06-01 to 2024-06-30. Summarize the findings and provide insights into any significant patterns or '
-    'concerns.')
-#model="gpt-3.5-turbo"
-model="gpt-4o"
+    'Examine the impact of extreme weather events on river discharge for June 2024. How can river discharge values be '
+    'interpreteted in terms of climate change?')
+model = "gpt-3.5-turbo"
+# model = "gpt-4o"
+
+second_system_prompt_gpt35 = (
+    "Write an extensive report based on the provided data for Munich. "
+    "If historic data is provided and relevant to the question, include a trend analysis to highlight changes and "
+    "trends over time in the context of climate change. "
+    "Finally, provide a detailed answer to the user question if a question is presented."
+)
+
+second_system_prompt_gpt4o = (
+    "Write an extensive weather report based on the provided data for Munich. "
+    # Necessary for GPT-4o to use DB data, otherwise will just query internet
+    "Try to focus on the data provided in the databases first, before querying from the internet. "
+    "If historic data is provided and relevant to the question, include a trend analysis to highlight changes and "
+    "trends over time in the context of climate change. "
+    "Finally, provide a detailed answer to the user question if a question is presented."
+)
 
 random.seed(42)
 
@@ -76,13 +89,7 @@ if __name__ == '__main__':
     hist_schema_path = "historic_climate_schema.sql"
     print("Schema file:", hist_schema_path)
 
-    # ask user to ask a question
-    question_original = input(
-        "* Please enter your question/prompt (Press Enter to use the default question): \n List all days where the "
-        "maximum temperature was above 30 degrees celsius.")
-
-    if question_original == '':
-        question_original = question
+    question_original = question
 
     # get schema string
     schema_file = open(schema_path, 'r').read()
@@ -96,15 +103,16 @@ if __name__ == '__main__':
     database = file_path
 
     # get GPT result
-    system_role = f'''Write python code to select and save relevant data from the database. Please save the retrieved values 
-    from the database to "{qa_id}_data.txt".
+    system_role = f'''Write python code to select and save relevant data from the database. Please save the retrieved 
+    values from the database to "{qa_id}_data.txt".
     Note: Historic Data is only provided from 1980 to 2023 for the days 07-01 to 07-09. '''
 
     question = (
             "Question/Prompt: " + question_original + '\n\n'
-                                                      "conn = sqlite3.connect('" + database + "')\n\n"
-                                                                                              "Current Weather Schema for the year 2024:\n" + schema + '\n\n'
-                                                                                                                                                       "Historic Weather Schema from 1980 to 2023:\n" + hist_schema + '\n\n')
+            "conn = sqlite3.connect('" + database + "')\n\n"
+            "Current Weather Schema for the year 2024:\n" + schema + '\n\n'
+            "Historic Weather Schema from 1980 to 2023:\n" + hist_schema + '\n\n'
+    )
 
     max_tokens = 2000
 
@@ -149,22 +157,17 @@ if __name__ == '__main__':
 
     data = open(f'{qa_id}_data.txt', 'r').read()
 
-    print("*** Step3: generate weather report")
+    print("*** Step3: generate report")
 
     question = "Question: " + question_original + '\nData: \n' + data
-    second_system_prompt = (
-        "Write an extensive weather report based on the provided data for Munich. "
-        # #Necessary for GPT-4o to use DB data, otherwise will just query internet
-        "Try to focus on the data provided in the databases first, before querying from the internet. " 
-        "If historic data is provided and relevant to the question, include a trend analysis to highlight changes and "
-        "trends over"
-        "time in the context of climate change. "
-        "Finally, provide a detailed answer to the user question if a question is presented."
-    )
-    # System role might need adjustment here
+
+    if model == 'gpt-4.5-turbo':
+        second_system_prompt = second_system_prompt_gpt4o
+    else:
+        second_system_prompt = second_system_prompt_gpt35
 
     start3 = time.time()
-    print('* Start generating analysis and insights ...')
+    print('* Start generating report ...')
 
     response = get_gpt_result(second_system_prompt, question, max_tokens)
 
