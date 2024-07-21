@@ -6,12 +6,12 @@ import random
 import time
 
 # Change here
-qa_id = 16
+qa_id = 10
 question = (
-    'Examine the impact of extreme weather events on river discharge for June 2024. How can river discharge values be '
-    'interpreteted in terms of climate change?')
-model = "gpt-3.5-turbo"
-# model = "gpt-4o"
+    'Analyze the frequency and intensity of droughts from 2024 compared to historical data from 1980-2023. Discuss '
+    'the potential implications for water resources and local ecosystems.')
+# model = "gpt-3.5-turbo"
+model = "gpt-4o"
 
 second_system_prompt_gpt35 = (
     "Write an extensive report based on the provided data for Munich. "
@@ -21,7 +21,7 @@ second_system_prompt_gpt35 = (
 )
 
 second_system_prompt_gpt4o = (
-    "Write an extensive weather report based on the provided data for Munich. "
+    "Write an extensive report based on the provided data for Munich. "
     # Necessary for GPT-4o to use DB data, otherwise will just query internet
     "Try to focus on the data provided in the databases first, before querying from the internet. "
     "If historic data is provided and relevant to the question, include a trend analysis to highlight changes and "
@@ -108,10 +108,10 @@ if __name__ == '__main__':
     Note: Historic Data is only provided from 1980 to 2023 for the days 07-01 to 07-09. '''
 
     question = (
-            "Question/Prompt: " + question_original + '\n\n'
-            "conn = sqlite3.connect('" + database + "')\n\n"
-            "Current Weather Schema for the year 2024:\n" + schema + '\n\n'
-            "Historic Weather Schema from 1980 to 2023:\n" + hist_schema + '\n\n'
+    "Question/Prompt: " + question_original + '\n\n'
+    "conn = sqlite3.connect('" + database + "')\n\n"
+    "Current Weather Schema for the year 2024:\n" + schema + '\n\n'
+    "Historic Weather Schema from 1980 to 2023:\n" + hist_schema + '\n\n'
     )
 
     max_tokens = 2000
@@ -161,7 +161,7 @@ if __name__ == '__main__':
 
     question = "Question: " + question_original + '\nData: \n' + data
 
-    if model == 'gpt-4.5-turbo':
+    if model == 'gpt-4o':
         second_system_prompt = second_system_prompt_gpt4o
     else:
         second_system_prompt = second_system_prompt_gpt35
