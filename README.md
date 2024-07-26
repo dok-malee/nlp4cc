@@ -25,3 +25,7 @@ Other possibly useful API's can be seen under Climate-APIs.md
 1. Get OpenAI API Key and set in .env (view .env.example)
 2. Install requirements
 3. Run qa_insights.py with set question and model
+
+## Acknowledgements
+Our project is inspired and uses some adapted code pieces from the following sources: 
+- [GPT4-as-DataAnalyst](https://github.com/DAMO-NLP-SG/GPT4-as-DataAnalyst)
