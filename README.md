@@ -17,6 +17,8 @@ Other possibly useful API's can be seen under Climate-APIs.md
 - GPT-4o
 - ClimateGPT
 
+## Results
+- [Results Excel](https://docs.google.com/spreadsheets/d/1-3PJ9CU_dea3ZjGgZRRrBxNqmNQ2pxBdcKT6NUP86bg/edit?usp=sharing)
 
 
 ## How to Use

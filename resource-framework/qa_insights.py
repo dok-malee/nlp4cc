@@ -6,10 +6,10 @@ import random
 import time
 
 # Change here
-qa_id = 10
+qa_id = 16
 question = (
-    'Analyze the frequency and intensity of droughts from 2024 compared to historical data from 1980-2023. Discuss '
-    'the potential implications for water resources and local ecosystems.')
+    'Examine the impact of extreme weather events on river discharge for June 2024. How can river discharge values be '
+    'interpreteted in terms of climate change?')
 # model = "gpt-3.5-turbo"
 model = "gpt-4o"
 
